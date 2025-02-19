@@ -48,7 +48,24 @@ pub fn main() !void {
             .insecure_skip_verify = true,
         });
 
+        // Send request
         try conn.writer().print("{}\r\n", .{uri});
+
+        // Get response & split as needed
+        const response: []const u8 = (try conn.next()).?;
+        var res_iterator = std.mem.splitScalar(u8, response, ' ');
+
+        // Parse code & separate response type
+        const code = try std.fmt.parseInt(u16, res_iterator.next().?, 10);
+        const res_type = std.mem.trim(u8, res_iterator.rest(), "\r\n");
+
+        if (code != 20) {
+            std.log.err("[{d}] {s}", .{ code, res_type });
+
+            try stderr.writeAll("\nPress Enter to continue");
+            _ = try stdin.readByte();
+            continue;
+        }
 
         // Print response
         while (try conn.next()) |data| {
