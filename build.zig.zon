@@ -1,0 +1,11 @@
+.{
+    .name = "gemini-zig",
+    .version = "0.0.1",
+    .dependencies = .{
+        .tls = .{
+            .url = "https://github.com/ianic/tls.zig/archive/d4782f553212f6294a012722cf1603a4a8432544.tar.gz",
+            .hash = "1220c0a911c6dd74912debac30e4cab6098d8a3102e131df9a347fca85cf1848fc4d",
+        },
+    },
+    .paths = .{ "build.zig", "build.zig.zon", "src" },
+}
