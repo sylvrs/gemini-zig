@@ -91,6 +91,7 @@ pub fn main() !void {
         var root_ca = try tls.config.CertBundle.fromSystem(ally);
         defer root_ca.deinit(ally);
 
+        // Attempt to upgrade connection to TLS
         var conn = try tls.client(tcp, .{
             .host = encoded_host,
             .root_ca = root_ca,
