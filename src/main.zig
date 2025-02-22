@@ -5,6 +5,41 @@ const Terminal = @import("Terminal.zig");
 const PROTOCOL = "gemini://";
 const PORT = 1965;
 
+const StatusCode = enum(u8) {
+    /// Input Status Codes
+    needs_input = 10,
+    needs_sensitive_input = 11,
+    /// Success Status
+    success = 20,
+    /// Redirect Status
+    temp_redirect = 30,
+    permanent_redirect = 31,
+    /// Temporary Failure
+    unspecified_condition = 40,
+    server_unavailable = 41,
+    cgi_error = 42,
+    proxy_error = 43,
+    slow_down = 44,
+    /// Permanent Failure
+    not_found = 51,
+    gone = 52,
+    proxy_req_refused = 53,
+    bad_request = 59,
+    /// Client Certificate
+    cert_required = 60,
+    cert_not_authorized = 61,
+    cert_not_valid = 62,
+
+    pub fn isError(self: StatusCode) bool {
+        const value: u8 = @intFromEnum(self);
+        return value >= 40 and value < 60;
+    }
+
+    pub fn isRedirect(self: StatusCode) bool {
+        return self == .temp_redirect or self == .permanent_redirect;
+    }
+};
+
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const ally = gpa.allocator();
@@ -71,11 +106,20 @@ pub fn main() !void {
         var res_iterator = std.mem.splitScalar(u8, response, ' ');
 
         // Parse code & separate response type
-        const code = try std.fmt.parseInt(u16, res_iterator.next().?, 10);
+        const raw_code = res_iterator.next().?;
+        const code = std.fmt.parseInt(u16, raw_code, 10) catch {
+            terminal.err("Unable to parse given status code: {s}", .{raw_code});
+            continue;
+        };
+        const status = std.meta.intToEnum(StatusCode, raw_code) catch {
+            terminal.err("Unable to decode status code: {s}", .{code});
+            continue;
+        };
+
         const res_type = std.mem.trim(u8, res_iterator.rest(), "\r\n");
 
-        if (code != 20) {
-            try terminal.err("[{d}] {s}", .{ code, res_type });
+        if (status.isError()) {
+            try terminal.err("[{d}: {s}] {s}", .{ code, std.enums.tagName(StatusCode, status), res_type });
             try terminal.print("\nPress Enter to continue", .{}, .{ .fg = .yellow });
             _ = try stdin.readByte();
             continue;
