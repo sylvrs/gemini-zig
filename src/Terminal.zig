@@ -4,7 +4,7 @@ const Self = @This();
 
 pub const Writer = std.io.Writer(*Self, std.io.AnyWriter.Error, write);
 
-const Color = enum(u8) {
+pub const Color = enum(u8) {
     // The sequence that defines the color in the terminal
     const Sequence = "\x1b[{s}m";
     const ForegroundOffset = 30;
@@ -66,15 +66,11 @@ pub fn writeCustom(self: *Self, bytes: []const u8) !void {
 }
 
 pub fn info(self: *Self, comptime fmt: []const u8, args: anytype) !void {
-    try self.setForeground(.cyan);
-    try self.writer().print("[info] " ++ fmt, args);
-    try self.reset();
+    try self.print("[info] " ++ fmt, args, .{ .fg = .cyan });
 }
 
 pub fn err(self: *Self, comptime fmt: []const u8, args: anytype) !void {
-    try self.setForeground(.red);
-    try self.writer().print("[err] " ++ fmt, args);
-    try self.reset();
+    try self.print("[err] " ++ fmt, args, .{ .fg = .red });
 }
 
 const PrintOptions = struct { bg: Color = .inherit, fg: Color = .inherit };

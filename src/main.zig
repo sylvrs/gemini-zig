@@ -109,18 +109,18 @@ pub fn main() !void {
         // Parse code & separate response type
         const raw_code = res_iterator.next().?;
         const code = std.fmt.parseInt(u16, raw_code, 10) catch {
-            terminal.err("Unable to parse given status code: {s}", .{raw_code});
+            terminal.err("Unable to parse given status code: {s}", .{raw_code}) catch unreachable;
             continue;
         };
-        const status = std.meta.intToEnum(StatusCode, raw_code) catch {
-            terminal.err("Unable to decode status code: {s}", .{code});
+        const status = std.meta.intToEnum(StatusCode, code) catch {
+            terminal.err("Unable to decode status code: {d}", .{code}) catch unreachable;
             continue;
         };
 
         const res_type = std.mem.trim(u8, res_iterator.rest(), "\r\n");
 
         if (status.isError()) {
-            try terminal.err("[{d}: {s}] {s}", .{ code, std.enums.tagName(StatusCode, status), res_type });
+            try terminal.err("[{d}: {s}] {s}", .{ code, @tagName(status), res_type });
             try terminal.print("\nPress Enter to continue", .{}, .{ .fg = .yellow });
             _ = try stdin.readByte();
             continue;
