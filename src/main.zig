@@ -69,7 +69,7 @@ pub fn main() !void {
         defer ally.free(full_path);
 
         const uri = std.Uri.parse(full_path) catch |err| {
-            terminal.err("Failed parsing URI: {}", .{err}) catch unreachable;
+            try terminal.err("Failed parsing URI: {}", .{err});
             try terminal.print("\nPress Enter to continue", .{}, .{ .fg = .yellow });
             // wait for input
             _ = try stdin.readByte();
@@ -79,7 +79,7 @@ pub fn main() !void {
 
         // Establish tcp connection
         var tcp = std.net.tcpConnectToHost(ally, encoded_host, PORT) catch {
-            terminal.err("Unable to connect to host: {s}", .{full_path}) catch unreachable;
+            try terminal.err("Unable to connect to host: {s}", .{full_path});
             try terminal.print("\nPress Enter to continue", .{}, .{ .fg = .yellow });
             // wait for input
             _ = try stdin.readByte();
@@ -109,11 +109,11 @@ pub fn main() !void {
         // Parse code & separate response type
         const raw_code = res_iterator.next().?;
         const code = std.fmt.parseInt(u16, raw_code, 10) catch {
-            terminal.err("Unable to parse given status code: {s}", .{raw_code}) catch unreachable;
+            try terminal.err("Unable to parse given status code: {s}", .{raw_code});
             continue;
         };
         const status = std.meta.intToEnum(StatusCode, code) catch {
-            terminal.err("Unable to decode status code: {d}", .{code}) catch unreachable;
+            try terminal.err("Unable to decode status code: {d}", .{code});
             continue;
         };
 
